@@ -1,54 +1,53 @@
-## Detailed S3-like Object Storage Flowchart
-
-```mermaid
 flowchart TD
-    subgraph Client
-        A(Start)
-        B(Create Bucket)
-        C(Upload Object)
-        D(Initiate Multipart Upload)
-        E(Upload Part)
-        F(Complete Multipart Upload)
-        G(Get Object)
-    end
+subgraph Client
+A["Start"]
+B["PUT /bucket"]
+C["PUT /bucket/{key}"]
+D["POST /multipart-initiate"]
+E["PUT /multipart-upload (parts)"]
+F["POST /multipart-complete"]
+G["GET /bucket/{key}"]
+end
 
     subgraph API_Layer
-        LB("Load Balancer / API Gateway")
-        APISvc("API Service")
+        LB["Load Balancer / API Gateway"]
+        API["API Service"]
         IAM["Auth Service (IAM)"]
     end
 
-    subgraph Control_Plane
-        MetaSvc("Metadata Service")
-        ConfigSvc("Configuration Service")
+    subgraph Metadata
+        Meta["Metadata Service"]
     end
 
-subgraph Data_Plane
-Router(Request Router)
-DataSvc(Data Service)
-StorageNodes["Storage Nodes\n(Erasure Coding & Replication)"]
-end
+    subgraph Data_Plane
+        Router["Request Router"]
+        DataStore["Data Service"]
+        Storage["Storage Nodes\n(Erasure Coding & Replication)"]
+    end
 
-subgraph Responses
-B_Resp(Bucket Created)
-C_Resp(Upload Success)
-D_Resp(UploadID)
-E_Resp(Part ETag)
-F_Resp(Complete Success)
-G_Resp(Object Data)
-end
+    subgraph Responses
+        R1["Bucket Created"]
+        R2["Object Uploaded"]
+        R3["UploadID"]
+        R4["Part ETag"]
+        R5["Upload Complete"]
+        R6["Object Data"]
+    end
 
-A --> B
-B --> LB --> APISvc --> IAM --> APISvc --> MetaSvc --> APISvc --> B_Resp
+    A --> B
+    B --> LB --> API --> IAM --> API --> Meta --> API --> R1
 
-C --> LB --> APISvc --> IAM --> APISvc --> MetaSvc --> APISvc --> Router --> DataSvc --> StorageNodes --> DataSvc --> APISvc --> MetaSvc --> APISvc --> C_Resp
+    A --> C
+    C --> LB --> API --> IAM --> API --> DataStore --> Storage --> DataStore --> Meta --> API --> R2
 
-D --> LB --> APISvc --> IAM --> APISvc --> MetaSvc --> APISvc --> D_Resp
+    A --> D
+    D --> LB --> API --> IAM --> API --> Meta --> API --> R3
 
-E --> LB --> APISvc --> IAM --> APISvc --> DataSvc --> StorageNodes --> DataSvc --> APISvc --> MetaSvc --> APISvc --> E_Resp
+    A --> E
+    E --> LB --> API --> IAM --> API --> DataStore --> Storage --> DataStore --> API --> Meta --> API --> R4
 
-F --> LB --> APISvc --> IAM --> APISvc --> DataSvc --> StorageNodes --> DataSvc --> APISvc --> MetaSvc --> APISvc --> F_Resp
+    A --> F
+    F --> LB --> API --> IAM --> API --> DataStore --> Storage --> DataStore --> API --> Meta --> API --> R5
 
-G --> LB --> APISvc --> IAM --> APISvc --> MetaSvc --> APISvc --> Router --> DataSvc --> StorageNodes --> DataSvc --> APISvc --> G_Resp
-```
-~~~~
+    A --> G
+    G --> LB --> API --> IAM --> API --> Meta --> API --> Router --> DataStore --> Storage --> DataStore --> API --> R6
