@@ -1,13 +1,16 @@
+## Detailed S3-like Object Storage Flowchart
+
+```mermaid
 flowchart TD
-subgraph Client
-A["Start"]
-B["PUT /bucket"]
-C["PUT /bucket/{key}"]
-D["POST /multipart-initiate"]
-E["PUT /multipart-upload (parts)"]
-F["POST /multipart-complete"]
-G["GET /bucket/{key}"]
-end
+    subgraph Client
+        A["Start"]
+        B["PUT /bucket"]
+        C["PUT /bucket/{key}"]
+        D["POST /multipart-initiate"]
+        E["PUT /multipart-upload (parts)"]
+        F["POST /multipart-complete"]
+        G["GET /bucket/{key}"]
+    end
 
     subgraph API_Layer
         LB["Load Balancer / API Gateway"]
@@ -51,3 +54,4 @@ end
 
     A --> G
     G --> LB --> API --> IAM --> API --> Meta --> API --> Router --> DataStore --> Storage --> DataStore --> API --> R6
+```
